@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>CoaChess Analysis Tool Results</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        var moveIndex = 0;
+        var gameName = 'static/' + '{{ game_name }}';  // Replace with your actual game name
+        var solutionMode = false;
+        var player = '{{ player }}';  // Replace with your actual player
+        var totalMoves = '{{ total_moves }}';  // Replace with your actual total moves
+        var info = JSON.parse('{{ info | tojson | safe }}');  // Replace with your actual info
+        var scores = JSON.parse('{{ all_scores | tojson | safe }}');
+        var ctx;
+        var chart; 
+        var chartIndex = 0;
+        var plot_score = [];
+        
+        function updateImage() {
+            var filename = 'move_' + String(moveIndex).padStart(3, '0');
+            if (solutionMode) {
+                filename += '_sol';
+            }
+            filename += '.svg';
+            document.getElementById('chessImage').src = gameName + '/' + filename;
+
+            if (info[moveIndex] === null) {
+                document.getElementById('info_text').innerHTML = "Opponent's turn";
+            }
+            else {
+                document.getElementById('info_text').innerHTML = info[moveIndex][1] + ' (' + info[moveIndex][0] / 100 + ')';
+            }
+            
+            // slices scores up to the current move into plot_score
+            plot_score = scores.slice(0, moveIndex + 1);
+                
+            // Add new data to the first dataset
+            chart.data.datasets[0].data = plot_score;
+
+            // Create as many labels as elements in plot_score
+            chart.data.labels = plot_score.map((value, index) => index + 1);   
+
+            chart.update();
+            console.log("update chart");
+            console.log(plot_score);
+        }
+
+        function drawScore() {
+            chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: plot_score.map((value, index) => index + 1),  // Create labels from 1 to the length of the list
+                    datasets: [{
+                        label: 'Score',
+                        data: plot_score,
+                        fill: false,
+                        borderColor: 'rgb(75, 192, 192)',
+                        tension: 0.1
+                    }]
+                },
+                options: {
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    },
+                    animation: {
+                        duration: 150  // Reduces the animation duration to Xms
+                    }
+                }
+            });
+        };
+
+        window.onload = function () {
+            ctx = document.getElementById('myChart').getContext('2d');
+            drawScore();
+            updateImage();
+            console.log(player);
+        };
+
+        function nextMove() {
+            if (moveIndex < (totalMoves - 1)) {
+                moveIndex++;
+                solutionMode = false;
+                updateImage();
+                // if (moveIndex % 2 != player) {
+                //     document.getElementById('toggleSolution').disabled = true;
+                // } else {
+                //     document.getElementById('toggleSolution').disabled = false;
+                // }
+            }
+        }
+
+        function previousMove() {
+            if (moveIndex > 0) {
+                moveIndex--;
+            }
+            solutionMode = false;
+            updateImage();
+        }
+
+        function toggleSolution() {
+            if (moveIndex % 2 == player) {
+                solutionMode = !solutionMode;
+                updateImage();
+            }
+        }
+    </script>
+</head>
+
+<body>
+    <img id="chessImage" src="" alt="Chess move">
+    <br>
+    <button onclick="previousMove()">Previous Move</button>
+    <button onclick="nextMove()">Next Move</button>
+    <button onclick="toggleSolution()">Toggle Solution</button>
+    <p id="info_text"></p>
+    <canvas id="myChart" width="600" style="width: 600px;"></canvas>
+</body>
+
+</html>
