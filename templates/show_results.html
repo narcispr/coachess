@@ -5,23 +5,23 @@
     <title>CoaChess Analysis Tool Results</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        #infoTable tr:nth-child(even) {
+        /* #infoTable tr:nth-child(even) {
             background-color: #AAEEEE;
         }
 
         #infoTable tr:nth-child(odd) {
             background-color: #fff8f8;
-        }
+        } */
 
         #infoTable {
             border: 0;
             padding: 5px;
         }
-        
-        #infoTable td, #infoTable th {
+
+        #infoTable td,
+        #infoTable th {
             padding: 0px;
         }
-
     </style>
     <script>
         var moveIndex = 0;
@@ -33,11 +33,23 @@
         var scores = JSON.parse('{{ all_scores | tojson | safe }}');
         var moves = JSON.parse('{{ all_moves | tojson | safe }}');
         var ctx;
-        var chart; 
+        var chart;
         var chartIndex = 0;
         var plot_score = [];
         var infoTable;
-        
+        var trp_green = "rgba(0, 255, 0, 0.5)";
+        var trp_blue = "rgba(0, 0, 255, 0.5)";
+        var trp_light_green = "rgba(144, 238, 144, 0.5)";
+        var trp_orange = "rgba(255, 165, 0, 0.5)";
+        var trp_yellow = "rgba(255, 255, 0, 0.5)";
+        var trp_red = "rgba(255, 0, 0, 0.5)";
+        var trp_pink = "rgba(255, 192, 203, 0.5)";
+        var trp_cyan = "rgba(0, 255, 255, 0.5)";
+        var trp_brown = "rgba(165, 42, 42, 0.5)";
+        var trp_magenta = "rgba(255, 0, 255, 0.5)";
+        var trp_gray = "rgba(128, 128, 128, 0.5)";
+
+
         function updateImage() {
             var filename = 'move_' + String(moveIndex).padStart(3, '0');
             if (solutionMode) {
@@ -47,12 +59,11 @@
             document.getElementById('chessImage').src = gameName + '/' + filename;
 
             // Plot Info
-            for(var i = infoTable.rows.length - 1; i > 0; i--)
-            {
+            for (var i = infoTable.rows.length - 1; i > 0; i--) {
                 infoTable.deleteRow(i);
             }
             var j = 1;
-            for (var i = 0; i < moveIndex+1; i=i+2) {
+            for (var i = 0; i < moveIndex + 1; i = i + 2) {
                 var row = infoTable.insertRow(-1);  // Insert a new row at the end of the table
                 var cell0 = row.insertCell(0);  // Insert a new cell in the row
                 var cell1 = row.insertCell(1);  // Insert a new cell in the row
@@ -61,20 +72,36 @@
                 cell0.innerHTML = j + '.';  // Set the content of the first cell to the index
                 j++;
                 cell1.innerHTML = moves[i];  // Set the content of the first cell to the index
-                cell2.innerHTML = moves[i+1];  // Set the content of the first cell to the index
-                
+                cell2.innerHTML = moves[i + 1];  // Set the content of the first cell to the index
+
                 if (info[i] === null) {
-                    cell3.innerHTML = info[i+1][1] + ' (' + info[i+1][0] / 100 + ')';
+                    cell3.innerHTML = info[i + 1][1] + ' (' + info[i + 1][0] / 100 + ')';
                 }
                 else {
                     cell3.innerHTML = info[i][1] + ' (' + info[i][0] / 100 + ')';
                 }
+
+                if (cell3.innerHTML.includes('Best')) {
+                    cell3.style.backgroundColor = trp_blue;
+                }
+                else if (cell3.innerHTML.includes('Excellent')) {
+                    cell3.style.backgroundColor = trp_green;
+                }
+                else if (cell3.innerHTML.includes('Good')) {
+                    cell3.style.backgroundColor = trp_light_green;
+                }
+                else if (cell3.innerHTML.includes('Blunder')) {
+                    cell3.style.backgroundColor = trp_orange;
+                }
+                else if (cell3.innerHTML.includes('Error') || cell3.innerHTML.includes('Mistake')) {
+                    cell3.style.backgroundColor = trp_red;
+                }
             }
-            
+
             // Plot score
             plot_score = scores.slice(0, moveIndex + 1);
             chart.data.datasets[0].data = plot_score;
-            chart.data.labels = plot_score.map((value, index) => index + 1);   
+            chart.data.labels = plot_score.map((value, index) => index + 1);
             chart.update();
 
         }
@@ -146,7 +173,9 @@
 </head>
 
 <body>
-    <div style="justify-content: center; align-items: center;" id="title"><h1 id="player_name">CoaChess Analysis Tool Results for </h1></div>
+    <div style="justify-content: center; align-items: center;" id="title">
+        <h1 id="player_name">CoaChess Analysis Tool Results for </h1>
+    </div>
     <div style="display: flex;">
         <div style="flex: 1; border: 1px solid black; padding: 10px; justify-content: center; align-items: center;">
             <img id="chessImage" src="" alt="Chess move">
