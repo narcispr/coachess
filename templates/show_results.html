@@ -4,6 +4,25 @@
 <head>
     <title>CoaChess Analysis Tool Results</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        #infoTable tr:nth-child(even) {
+            background-color: #AAEEEE;
+        }
+
+        #infoTable tr:nth-child(odd) {
+            background-color: #fff8f8;
+        }
+
+        #infoTable {
+            border: 0;
+            padding: 5px;
+        }
+        
+        #infoTable td, #infoTable th {
+            padding: 0px;
+        }
+
+    </style>
     <script>
         var moveIndex = 0;
         var gameName = 'static/' + '{{ game_name }}';  // Replace with your actual game name
@@ -12,10 +31,12 @@
         var totalMoves = '{{ total_moves }}';  // Replace with your actual total moves
         var info = JSON.parse('{{ info | tojson | safe }}');  // Replace with your actual info
         var scores = JSON.parse('{{ all_scores | tojson | safe }}');
+        var moves = JSON.parse('{{ all_moves | tojson | safe }}');
         var ctx;
         var chart; 
         var chartIndex = 0;
         var plot_score = [];
+        var infoTable;
         
         function updateImage() {
             var filename = 'move_' + String(moveIndex).padStart(3, '0');
@@ -25,25 +46,37 @@
             filename += '.svg';
             document.getElementById('chessImage').src = gameName + '/' + filename;
 
-            if (info[moveIndex] === null) {
-                document.getElementById('info_text').innerHTML = "Opponent's turn";
+            // Plot Info
+            for(var i = infoTable.rows.length - 1; i > 0; i--)
+            {
+                infoTable.deleteRow(i);
             }
-            else {
-                document.getElementById('info_text').innerHTML = info[moveIndex][1] + ' (' + info[moveIndex][0] / 100 + ')';
+            var j = 1;
+            for (var i = 0; i < moveIndex+1; i=i+2) {
+                var row = infoTable.insertRow(-1);  // Insert a new row at the end of the table
+                var cell0 = row.insertCell(0);  // Insert a new cell in the row
+                var cell1 = row.insertCell(1);  // Insert a new cell in the row
+                var cell2 = row.insertCell(2);  // Insert another new cell in the row
+                var cell3 = row.insertCell(3);  // Insert another new cell in the row
+                cell0.innerHTML = j + '.';  // Set the content of the first cell to the index
+                j++;
+                cell1.innerHTML = moves[i];  // Set the content of the first cell to the index
+                cell2.innerHTML = moves[i+1];  // Set the content of the first cell to the index
+                
+                if (info[i] === null) {
+                    cell3.innerHTML = info[i+1][1] + ' (' + info[i+1][0] / 100 + ')';
+                }
+                else {
+                    cell3.innerHTML = info[i][1] + ' (' + info[i][0] / 100 + ')';
+                }
             }
             
-            // slices scores up to the current move into plot_score
+            // Plot score
             plot_score = scores.slice(0, moveIndex + 1);
-                
-            // Add new data to the first dataset
             chart.data.datasets[0].data = plot_score;
-
-            // Create as many labels as elements in plot_score
             chart.data.labels = plot_score.map((value, index) => index + 1);   
-
             chart.update();
-            console.log("update chart");
-            console.log(plot_score);
+
         }
 
         function drawScore() {
@@ -74,9 +107,17 @@
 
         window.onload = function () {
             ctx = document.getElementById('myChart').getContext('2d');
+            infoTable = document.getElementById('infoTable');
             drawScore();
             updateImage();
             console.log(player);
+
+            var playerElement = document.getElementById('player_name');
+            if (player == 0) {
+                playerElement.innerHTML += "WHITE";
+            } else {
+                playerElement.innerHTML += "BLACK";
+            }
         };
 
         function nextMove() {
@@ -84,11 +125,6 @@
                 moveIndex++;
                 solutionMode = false;
                 updateImage();
-                // if (moveIndex % 2 != player) {
-                //     document.getElementById('toggleSolution').disabled = true;
-                // } else {
-                //     document.getElementById('toggleSolution').disabled = false;
-                // }
             }
         }
 
@@ -110,13 +146,29 @@
 </head>
 
 <body>
-    <img id="chessImage" src="" alt="Chess move">
-    <br>
-    <button onclick="previousMove()">Previous Move</button>
-    <button onclick="nextMove()">Next Move</button>
-    <button onclick="toggleSolution()">Toggle Solution</button>
-    <p id="info_text"></p>
-    <canvas id="myChart" width="600" style="width: 600px;"></canvas>
+    <div style="justify-content: center; align-items: center;" id="title"><h1 id="player_name">CoaChess Analysis Tool Results for </h1></div>
+    <div style="display: flex;">
+        <div style="flex: 1; border: 1px solid black; padding: 10px; justify-content: center; align-items: center;">
+            <img id="chessImage" src="" alt="Chess move">
+            <br>
+            <button onclick="previousMove()">Previous Move</button>
+            <button onclick="nextMove()">Next Move</button>
+            <button onclick="toggleSolution()">Toggle Solution</button>
+            <div style="width: 550px; height: 200px; overflow: auto;">
+                <canvas id="myChart" width="550" style="width: 550px;"></canvas>
+            </div>
+        </div>
+        <div style="flex: 1; border: 1px solid black; padding: 10px; height: 665px; overflow-y: auto;">
+            <table id="infoTable">
+                <tr>
+                    <th></th>
+                    <th>White</th>
+                    <th>Black</th>
+                    <th>Comment</th>
+                </tr>
+            </table>
+        </div>
+    </div>
 </body>
 
 </html>

@@ -10,7 +10,7 @@ import seaborn as sns
 import os
 
 from flask import Flask, render_template, request, flash
-from chess_analysis import import_pgn, analyse_game, create_game_plots
+from chess_analysis import import_pgn, analyse_game
 
 app = Flask(__name__)
 app.secret_key = 'bon_2024'
@@ -30,13 +30,13 @@ def home():
         total_moves = sum(1 for _ in game.mainline_moves())
         print("Total moves:", total_moves)
         board = game.board()
-        message = 'The game is going to be analyzed. {} turns to go. Be pattient!!!'.format(total_moves)
+        message = 'The game is going to be analyzed. {} ply to go. Be pattient!!!'.format(total_moves)
         print(message)
         flash(message)
-        all_scores, all_info = analyse_game(game, board, player, game_name)
+        all_scores, all_info, all_moves = analyse_game(game, board, player, game_name)
         all_scores = np.clip(all_scores, -1500, 1500).tolist()
         # create_game_plots(all_scores, all_differences, game_name)
-        return render_template('show_results.html', game_name=game_name, total_moves=total_moves, player=player, info=all_info, all_scores=all_scores)
+        return render_template('show_results.html', game_name=game_name, total_moves=total_moves, player=player, info=all_info, all_scores=all_scores, all_moves=all_moves)
     return render_template('index.html')
 
 if __name__ == '__main__':
