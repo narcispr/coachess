@@ -97,8 +97,8 @@ def check_movement(real_score, scores):
                 avoid_checkmate += 1 # if all movements except 1 or 2 are checkmate... it is considered a checkmate avoided
             elif m[2] > 0:
                 missing_mate = min(missing_mate, m[2])
-    print("avoid_checkmate", avoid_checkmate, "missing_mate", missing_mate, "total movements", len(scores))
-    if missing_mate < 100 and (real_score[2] is None or real_score[2] > 0):
+    
+    if missing_mate < 100 and (real_score[2] is None or real_score[2] > missing_mate):
         text += " Missed mate in {}".format(missing_mate)
         print(text)
     if avoid_checkmate > len(scores)/2 and (real_score[2] is None or real_score[2] < 0):
@@ -164,39 +164,3 @@ def analyse_game(game: chess.pgn.Game, board: chess.Board, player:int, game_name
         board.push(move)
 
     return all_scores, all_info, all_moves
-
-# def create_game_plots(all_scores, all_differences, game_name):
-#     # Create a new figure
-#     plt.figure(figsize=(10, 6))
-
-#     # Plot the scores
-#     clipped_scores = np.clip(all_scores, -1000, 1000)
-#     plt.plot(clipped_scores, color='blue', linestyle='-')
-#     plt.axis([0, len(clipped_scores), 0, max(clipped_scores)])
-
-#     # Add labels and title
-#     plt.xlabel('Move number')
-#     plt.ylabel('Score')
-#     plt.title('Game Analysis')
-
-#     # Add a grid
-#     plt.grid(True)
-
-#     # Show the plot
-#     plt.savefig("static/{}/scores.png".format(game_name), dpi=300, transparent=True)
-#     plt.clf()
-
-#     # Plot the differences
-#     a = np.clip(all_differences, -1000, 0)
-#     plt.plot(a, color='blue', linestyle='-')
-    
-#     # Add labels and title
-#     plt.xlabel('Move number')
-#     plt.ylabel('Score Difference')
-#     plt.title('Game Analysis')
-
-#     # Add a grid
-#     plt.grid(True)
-
-#     # Show the plot
-#     plt.savefig("static/{}/differences.png".format(game_name), dpi=300, transparent=True)
