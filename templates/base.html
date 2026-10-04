@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="ca">
+<head>
+    <meta charset="utf-8">
+    <meta name="theme-color" content="#203c31">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}CoaChess · Anàlisi d'escacs{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+    {% block scripts %}{% endblock %}
+</head>
+<body>
+<header class="site-header"><a class="brand" href="{{ url_for('home') }}">♞ CoaChess</a><span>El teu espai d'anàlisi d'escacs</span></header>
+<main>{% block content %}{% endblock %}</main>
+</body>
+</html>

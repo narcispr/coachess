@@ -1,0 +1,14 @@
+# Servei d'usuari. Aquest exemple assumeix el repositori a ~/coachess.
+[Unit]
+Description=CoaChess - anàlisi personal d'escacs
+
+[Service]
+Type=simple
+WorkingDirectory=%h/coachess
+ExecStart=%h/coachess/.venv/bin/python %h/coachess/server.py --host 0.0.0.0
+Restart=on-failure
+RestartSec=5
+KillMode=control-group
+
+[Install]
+WantedBy=default.target

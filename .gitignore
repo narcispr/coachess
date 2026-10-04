@@ -75,3 +75,9 @@ instance/
 *.rdb
 *.pyc
 .DS_Store
+# Local environment, downloaded engine and generated analysis images
+.venv/
+/engines/
+/static/*
+!/static/css/
+!/static/js/

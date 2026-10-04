@@ -1,49 +1,41 @@
-<!DOCTYPE html>
-<html>
-
-<head>
-    <title>Chess Analysis</title>
-    <script>
-        window.onload = function () {
-            var now = new Date();
-            var year = now.getFullYear();
-            var month = now.getMonth() + 1;
-            var day = now.getDate();
-            var hour = now.getHours();
-            var minute = now.getMinutes();
-            var datetime = year.toString() + month.toString() + day.toString() + hour.toString() + minute.toString();
-            document.getElementById('game_name').value = datetime;
-        };
-
-        function myFunction() {
-            document.getElementById("submit-button").disabled = true;
-        };
-
-    </script>
-</head>
-
-<body>
-    <form method="POST">
-        <label for="pgn">Paste PGN here:</label><br>
-        <textarea id="pgn" name="pgn" rows="4" cols="50"></textarea><br>
-        <label for="player">Player:</label><br>
-        <select id="player" name="player">
-            <option value="WHITE">WHITE</option>
-            <option value="BLACK">BLACK</option>
-        </select><br>
-        <label for="game_name">Game Name:</label><br>
-        <input type="text" id="game_name" name="game_name" value=""><br>
-        <input type="submit" value="Analyze" id="submit-button">
-    </form>
-    {% with messages = get_flashed_messages() %}
-    {% if messages %}
-      <ul class=flashes>
-      {% for message in messages %}
-        <li>{{ message }}</li>
-      {% endfor %}
-      </ul>
-    {% endif %}
-  {% endwith %}
-</body>
-
-</html>
+{% extends 'base.html' %}
+{% block scripts %}<script src="{{ url_for('static', filename='js/form.js') }}" defer></script>{% endblock %}
+{% block content %}
+<div class="intro"><h1>Entén les teves jugades</h1><p>Importa una partida PGN i explora l'anàlisi mentre Stockfish la calcula.</p></div>
+{% with messages = get_flashed_messages() %}{% for message in messages %}<div class="notice error" role="alert">{{ message }}</div>{% endfor %}{% endwith %}
+<form method="post" id="analysis-form" data-defaults='{{ defaults | tojson }}'>
+    <section class="card">
+        <h2>La partida</h2>
+        <div class="form-row">
+            <label>Nom de la partida<input name="game_name" id="game_name" maxlength="120" placeholder="La meva partida" value="{{ request.form.get('game_name', '') }}"></label>
+            <label>Jugador que vols analitzar<select name="player" id="player"><option value="WHITE">Blanques</option><option value="BLACK" {% if request.form.get('player') == 'BLACK' %}selected{% endif %}>Negres</option></select></label>
+        </div>
+        <label for="pgn-file">Obre un fitxer PGN <span class="muted">(opcional)</span></label>
+        <button type="button" id="choose-file" class="secondary">Tria un fitxer PGN</button>
+        <input type="file" id="pgn-file" accept=".pgn,text/plain" hidden>
+        <p id="file-status" class="muted" role="status"></p>
+        <label for="pgn">O enganxa el contingut PGN</label>
+        <textarea id="pgn" name="pgn" rows="9" required placeholder="1. e4 e5 2. Nf3 Nc6 …">{{ request.form.get('pgn', '') }}</textarea>
+        <p class="muted">S'analitza la primera partida del fitxer i la seva línia principal.</p>
+    </section>
+    <section class="card">
+        <div class="section-heading"><h2>Com vols analitzar-la?</h2><button type="button" id="reset-settings" class="secondary">Restableix els valors recomanats</button></div>
+        <p>Un bon punt de partida: <strong>0,5 segons per cerca i 3 línies candidates</strong>. Augmenta el temps si vols aprofundir; redueix-lo si vols una primera lectura ràpida.</p>
+        <p>Classifiquem les jugades per la pèrdua de probabilitat estimada de victòria: <strong>5 pp = imprecisió, 10 pp = error, 15 pp = error greu</strong>. Passar del 50 % al 40 % és perdre 10 punts percentuals (pp).</p>
+        <p class="muted">Referència: <a href="https://lichess.org/page/accuracy" target="_blank" rel="noopener">mètrica de Lichess</a>. Són orientacions, no una probabilitat exacta per al teu nivell. Els temps curts poden donar avaluacions menys estables.</p>
+        <div class="settings-grid">
+        {% for name, label, minimum, maximum, step, unit in controls %}
+            <div class="setting">
+                <label for="{{ name }}">{{ label }}</label>
+                <div class="slider-row">
+                    <input type="range" id="{{ name }}-slider" aria-label="{{ label }}" min="{{ minimum }}" max="{{ maximum }}" step="{{ step }}" value="{{ values[name] }}" data-control="{{ name }}">
+                    <input type="number" name="{{ name }}" id="{{ name }}" min="{{ minimum }}" max="{{ maximum }}" step="{{ step }}" value="{{ values[name] }}" required><span>{{ unit }}</span>
+                </div>
+            </div>
+        {% endfor %}
+        </div>
+        <p class="muted">Els llindars han d'anar en ordre creixent. Una bona jugada queda entre excel·lent i imprecisió. 100 centipeons (cp) equivalen a un peó; la tolerància d'alternatives només filtra les fletxes candidates. El marge de mat evita avisos per petites diferències en la longitud del mat.</p>
+    </section>
+    <div class="form-actions"><button type="submit" id="submit-button">Comença l'anàlisi</button><span id="submit-status" class="muted" role="status"></span></div>
+</form>
+{% endblock %}

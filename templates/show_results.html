@@ -1,203 +1,63 @@
-<!DOCTYPE html>
-<html>
-
-<head>
-    <title>CoaChess Analysis Tool Results</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style>
-        /* #infoTable tr:nth-child(even) {
-            background-color: #AAEEEE;
-        }
-
-        #infoTable tr:nth-child(odd) {
-            background-color: #fff8f8;
-        } */
-
-        #infoTable {
-            border: 0;
-            padding: 5px;
-        }
-
-        #infoTable td,
-        #infoTable th {
-            padding: 0px;
-        }
-    </style>
-    <script>
-        var moveIndex = 0;
-        var gameName = 'static/' + '{{ game_name }}';  // Replace with your actual game name
-        var solutionMode = false;
-        var player = '{{ player }}';  // Replace with your actual player
-        var totalMoves = '{{ total_moves }}';  // Replace with your actual total moves
-        var info = JSON.parse('{{ info | tojson | safe }}');  // Replace with your actual info
-        var scores = JSON.parse('{{ all_scores | tojson | safe }}');
-        var moves = JSON.parse('{{ all_moves | tojson | safe }}');
-        var ctx;
-        var chart;
-        var chartIndex = 0;
-        var plot_score = [];
-        var infoTable;
-        var trp_green = "rgba(0, 255, 0, 0.5)";
-        var trp_blue = "rgba(0, 0, 255, 0.5)";
-        var trp_light_green = "rgba(144, 238, 144, 0.5)";
-        var trp_orange = "rgba(255, 165, 0, 0.5)";
-        var trp_yellow = "rgba(255, 255, 0, 0.5)";
-        var trp_red = "rgba(255, 0, 0, 0.5)";
-        var trp_pink = "rgba(255, 192, 203, 0.5)";
-        var trp_cyan = "rgba(0, 255, 255, 0.5)";
-        var trp_brown = "rgba(165, 42, 42, 0.5)";
-        var trp_magenta = "rgba(255, 0, 255, 0.5)";
-        var trp_gray = "rgba(128, 128, 128, 0.5)";
-
-
-        function updateImage() {
-            var filename = 'move_' + String(moveIndex).padStart(3, '0');
-            if (solutionMode) {
-                filename += '_sol';
-            }
-            filename += '.svg';
-            document.getElementById('chessImage').src = gameName + '/' + filename;
-
-            // Plot Info
-            for (var i = infoTable.rows.length - 1; i > 0; i--) {
-                infoTable.deleteRow(i);
-            }
-            var j = 1;
-            for (var i = 0; i < moveIndex + 1; i = i + 2) {
-                var row = infoTable.insertRow(-1);  // Insert a new row at the end of the table
-                var cell0 = row.insertCell(0);  // Insert a new cell in the row
-                var cell1 = row.insertCell(1);  // Insert a new cell in the row
-                var cell2 = row.insertCell(2);  // Insert another new cell in the row
-                var cell3 = row.insertCell(3);  // Insert another new cell in the row
-                cell0.innerHTML = j + '.';  // Set the content of the first cell to the index
-                j++;
-                cell1.innerHTML = moves[i];  // Set the content of the first cell to the index
-                cell2.innerHTML = moves[i + 1];  // Set the content of the first cell to the index
-
-                if (info[i] === null) {
-                    cell3.innerHTML = info[i + 1][1] + ' (' + info[i + 1][0] / 100 + ')';
-                }
-                else {
-                    cell3.innerHTML = info[i][1] + ' (' + info[i][0] / 100 + ')';
-                }
-
-                if (cell3.innerHTML.includes('Best')) {
-                    cell3.style.backgroundColor = trp_blue;
-                }
-                else if (cell3.innerHTML.includes('Excellent')) {
-                    cell3.style.backgroundColor = trp_green;
-                }
-                else if (cell3.innerHTML.includes('Good')) {
-                    cell3.style.backgroundColor = trp_light_green;
-                }
-                else if (cell3.innerHTML.includes('Blunder')) {
-                    cell3.style.backgroundColor = trp_orange;
-                }
-                else if (cell3.innerHTML.includes('Error') || cell3.innerHTML.includes('Mistake')) {
-                    cell3.style.backgroundColor = trp_red;
-                }
-            }
-
-            // Plot score
-            plot_score = scores.slice(0, moveIndex + 1);
-            chart.data.datasets[0].data = plot_score;
-            chart.data.labels = plot_score.map((value, index) => index + 1);
-            chart.update();
-
-        }
-
-        function drawScore() {
-            chart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: plot_score.map((value, index) => index + 1),  // Create labels from 1 to the length of the list
-                    datasets: [{
-                        label: 'Score',
-                        data: plot_score,
-                        fill: false,
-                        borderColor: 'rgb(75, 192, 192)',
-                        tension: 0.1
-                    }]
-                },
-                options: {
-                    scales: {
-                        y: {
-                            beginAtZero: true
-                        }
-                    },
-                    animation: {
-                        duration: 150  // Reduces the animation duration to Xms
-                    }
-                }
-            });
-        };
-
-        window.onload = function () {
-            ctx = document.getElementById('myChart').getContext('2d');
-            infoTable = document.getElementById('infoTable');
-            drawScore();
-            updateImage();
-            console.log(player);
-
-            var playerElement = document.getElementById('player_name');
-            if (player == 0) {
-                playerElement.innerHTML += "WHITE";
-            } else {
-                playerElement.innerHTML += "BLACK";
-            }
-        };
-
-        function nextMove() {
-            if (moveIndex < (totalMoves - 1)) {
-                moveIndex++;
-                solutionMode = false;
-                updateImage();
-            }
-        }
-
-        function previousMove() {
-            if (moveIndex > 0) {
-                moveIndex--;
-            }
-            solutionMode = false;
-            updateImage();
-        }
-
-        function toggleSolution() {
-            if (moveIndex % 2 == player) {
-                solutionMode = !solutionMode;
-                updateImage();
-            }
-        }
-    </script>
-</head>
-
-<body>
-    <div style="justify-content: center; align-items: center;" id="title">
-        <h1 id="player_name">CoaChess Analysis Tool Results for </h1>
-    </div>
-    <div style="display: flex;">
-        <div style="flex: 1; border: 1px solid black; padding: 10px; justify-content: center; align-items: center;">
-            <img id="chessImage" src="" alt="Chess move">
-            <br>
-            <button onclick="previousMove()">Previous Move</button>
-            <button onclick="nextMove()">Next Move</button>
-            <button onclick="toggleSolution()">Toggle Solution</button>
-            <div style="width: 550px; height: 250px; overflow: auto;">
-                <canvas id="myChart" width="550" style="width: 550px;"></canvas>
-            </div>
+{% extends 'base.html' %}
+{% block title %}{{ job.title }} · CoaChess{% endblock %}
+{% block scripts %}
+<script id="chart-library" src="https://cdn.jsdelivr.net/npm/chart.js" async></script>
+<script id="analysis-data" type="application/json">{{ {'job': job, 'statusUrl': status_url, 'imageBase': image_base} | tojson }}</script>
+<script src="{{ url_for('static', filename='js/analysis.js') }}" defer></script>
+{% endblock %}
+{% block content %}
+<div class="section-heading page-heading"><div><h1>{{ job.title }}</h1><p>Anàlisi de les {{ 'blanques' if job.player == 0 else 'negres' }} · {{ job.total }} {{ 'mitja jugada' if job.total == 1 else 'mitges jugades' }}</p></div><a class="button secondary" href="{{ url_for('home') }}">Nova anàlisi</a></div>
+<section class="card progress-card" aria-label="Progrés de l'anàlisi">
+    <div class="status-line"><span class="spinner" id="spinner" aria-hidden="true"></span><span id="analysis-status" role="status" aria-live="polite">Preparant Stockfish. Esperant la primera jugada…</span></div>
+    <progress id="progress" max="{{ job.total }}" value="0" aria-label="Jugades analitzades"></progress>
+    <p class="muted">L’anàlisi continua en segon pla. Avança pel tauler quan vulguis amb els botons o la taula.</p>
+    <p id="analysis-error" class="error-text" role="alert" hidden></p>
+</section>
+<div class="results-grid">
+    <section class="card board-card">
+        <div class="section-heading"><h2 id="position-label">Posició inicial</h2><span class="badge" id="score-label">Esperant l'avaluació</span></div>
+        <div id="board" class="board" aria-label="Tauler d'escacs">{{ job.initial_svg | safe }}</div>
+        <div class="navigation" aria-label="Navegació per la partida">
+            <button type="button" id="initial" class="secondary">Inicial</button>
+            <button type="button" id="previous">← Anterior</button>
+            <button type="button" id="next">Següent →</button>
+            <button type="button" id="final" class="secondary" disabled>Final</button>
         </div>
-        <div style="flex: 1; border: 1px solid black; padding: 10px; height: 700px; overflow-y: auto;">
-            <table id="infoTable">
-                <tr>
-                    <th></th>
-                    <th>White</th>
-                    <th>Black</th>
-                    <th>Comment</th>
-                </tr>
-            </table>
-        </div>
-    </div>
-</body>
+        <button type="button" id="solution" class="secondary" disabled>Mostra les alternatives</button>
+        <details class="navigation-help"><summary>Com navegar pel tauler</summary><p>Tecles ← i → per navegar; espai per alternar les fletxes. El tauler mostra la posició abans de cada jugada. «Final» mostra la posició després de l'última.</p></details>
+        <p id="move-comment" class="move-comment"></p>
+        <ul id="alternatives" class="alternatives" hidden></ul>
 
-</html>
+    </section>
+    <section class="card moves-card">
+        <h2>Jugades analitzades</h2>
+        <p id="moves-empty" class="muted">Les jugades apareixeran aquí a mesura que estiguin disponibles.</p>
+        <div class="table-scroll"><table id="moves-table"><thead><tr><th scope="col">Torn</th><th scope="col">Blanques</th><th scope="col">Negres</th><th scope="col">Comentari</th></tr></thead><tbody></tbody></table></div>
+        <details class="settings-summary"><summary>Paràmetres d'aquesta anàlisi</summary><dl>
+            <dt>Temps per cerca</dt><dd>{{ job.settings.time_limit }} s</dd>
+            <dt>Línies candidates</dt><dd>{{ job.settings.multipv }}</dd>
+            <dt>Excel·lent fins a</dt><dd>{{ job.settings.excellent }} pp</dd>
+            <dt>Imprecisió / error / error greu</dt><dd>{{ job.settings.inaccuracy }} / {{ job.settings.mistake }} / {{ job.settings.blunder }} pp</dd>
+            <dt>Tolerància d'alternatives</dt><dd>{{ job.settings.alternative_tolerance }} cp</dd>
+            <dt>Marge de mat</dt><dd>{{ job.settings.mate_slack }} jugades</dd>
+        </dl></details>
+    </section>
+    <section class="card chart-card" aria-label="Evolució de l’avaluació">
+        <h2>Evolució de l'avaluació</h2>
+        <div class="chart-container"><canvas id="score-chart" aria-label="Gràfic de l'avaluació" role="img"></canvas></div>
+        <p id="chart-status" class="muted" hidden>El gràfic no està disponible. Pots continuar consultant les jugades i les puntuacions.</p>
+        <p class="muted">Positiu afavoreix el jugador seleccionat. Les puntuacions són en peons; el gràfic es limita a ±15.</p>
+    </section>
+</div>
+<section class="card analysis-summary" id="analysis-summary" aria-labelledby="summary-title" aria-live="polite" hidden>
+    <h2 id="summary-title">Resum de l'anàlisi</h2>
+    <p class="muted"><span id="summary-total">0</span> jugades analitzades de les {{ 'blanques' if job.player == 0 else 'negres' }}. Les jugades bones inclouen les excel·lents.</p>
+    <dl class="summary-grid">
+        <div class="summary-item best"><dt>Millors jugades</dt><dd id="summary-best">0</dd></div>
+        <div class="summary-item good"><dt>Jugades bones</dt><dd id="summary-good">0</dd></div>
+        <div class="summary-item inaccuracy"><dt>Imprecisions</dt><dd id="summary-inaccuracy">0</dd></div>
+        <div class="summary-item mistake"><dt>Errors</dt><dd id="summary-mistake">0</dd></div>
+        <div class="summary-item blunder"><dt>Errors greus</dt><dd id="summary-blunder">0</dd></div>
+    </dl>
+</section>
+{% endblock %}
